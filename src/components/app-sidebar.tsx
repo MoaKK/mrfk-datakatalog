@@ -190,9 +190,9 @@ export function AppSidebar() {
             if (isMobile) setOpenMobile(false);
           }}
         >
-          NVDB Objektkatalog
+          MRFK - Datakatalog
           <span className="block text-xs font-normal text-muted-foreground">
-            Krav til innlevering av data
+            Møre og Romsdal fylkeskommune - Krav til innlevering av NVDB data
           </span>
         </Link>
         <SidebarSeparator className="mx-0" />
