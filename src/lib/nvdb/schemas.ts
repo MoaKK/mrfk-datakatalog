@@ -74,38 +74,14 @@ const vegobjekttypeBaseSchema = z.object({
 export const vegobjekttypeIndeksSchema = vegobjekttypeBaseSchema
   .extend({
     kategorier: z.array(z.object({ id: z.number() })).nullish(),
-    egenskapstyper: z
-      .array(
-        z.object({
-          navn: z.string(),
-          egenskapstype: z.string(),
-          tillatte_verdier: z
-            .array(z.object({ verdi: z.union([z.string(), z.number()]).nullish() }))
-            .nullish(),
-        }),
-      )
-      .nullish(),
   })
-  .transform((t) => {
-    const egenskaper = (t.egenskapstyper ?? []).filter(
-      (e) => !SKJULTE_EGENSKAPSTYPER.has(e.egenskapstype),
-    );
-    return {
-      id: t.id,
-      navn: t.navn,
-      hovedkategori: t.hovedkategori ?? null,
-      status: t.status ?? null,
-      kategorier: (t.kategorier ?? []).map((k) => k.id),
-      egenskaper: egenskaper.map((e) => e.navn),
-      verdier: [
-        ...new Set(
-          egenskaper.flatMap((e) =>
-            (e.tillatte_verdier ?? []).flatMap((v) => (v.verdi == null ? [] : [String(v.verdi)])),
-          ),
-        ),
-      ],
-    };
-  });
+  .transform((t) => ({
+    id: t.id,
+    navn: t.navn,
+    hovedkategori: t.hovedkategori ?? null,
+    status: t.status ?? null,
+    kategorier: (t.kategorier ?? []).map((k) => k.id),
+  }));
 
 export const vegobjekttypeDetailSchema = vegobjekttypeBaseSchema.extend({
   beskrivelse: z.string().nullish(),

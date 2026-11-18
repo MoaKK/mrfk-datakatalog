@@ -7,8 +7,6 @@ const SCROLL_NOKKEL = "nvdb-sidemeny-scroll";
 const tilstandSchema = z.object({
   valg: z.object({
     tekst: z.string().max(100),
-    iEgenskaper: z.boolean(),
-    iVerdier: z.boolean(),
     kategoriId: z.number().int().positive().nullable(),
     sortering: z.enum(["navn", "nummer"]),
     bareElektro: z.boolean().default(false),

@@ -33,7 +33,7 @@ export function ObjekttypeMeny({ resultater, erElektro, etikettKlasse }: Props) 
         <span title="Vegobjekttypens nummer i NVDB">Nummer</span>
       </SidebarGroupLabel>
       <SidebarMenu className="[&_a]:no-underline">
-        {resultater.map(({ type, treff }) => {
+        {resultater.map(({ type }) => {
           const href = `/objekttyper/${type.id}`;
           const elektro = erElektro?.(type.id, type.kategorier) ?? false;
           return (
@@ -41,18 +41,15 @@ export function ObjekttypeMeny({ resultater, erElektro, etikettKlasse }: Props) 
               <SidebarMenuButton
                 render={<Link href={href} prefetch={false} />}
                 isActive={pathname === href}
-                title={`${type.navn} (nummer ${type.id})${elektro ? ". Elektro-objekt" : ""}${treff ? `. ${treff}` : ""}`}
+                title={`${type.navn} (nummer ${type.id})${elektro ? ". Elektro-objekt" : ""}`}
                 onClick={() => {
                   if (isMobile) setOpenMobile(false);
                 }}
-                className={treff ? "h-auto flex-col items-start gap-0 py-1.5 pr-12" : "pr-12"}
+                className="pr-12"
               >
                 <span className={cn("w-full truncate", elektro && ELEKTRO_FARGE)}>
                   {type.navn}
                 </span>
-                {treff && (
-                  <span className="w-full truncate text-xs text-muted-foreground">{treff}</span>
-                )}
               </SidebarMenuButton>
               <SidebarMenuBadge>{type.id}</SidebarMenuBadge>
             </SidebarMenuItem>

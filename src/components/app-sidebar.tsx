@@ -67,7 +67,7 @@ export function AppSidebar() {
   const utsattValg = useDeferredValue(valg);
   const { isMobile, openMobile, setOpenMobile } = useSidebar();
 
-  const sokNokkel = `${utsattValg.tekst}|${utsattValg.kategoriId}|${utsattValg.iEgenskaper}|${utsattValg.iVerdier}|${utsattValg.bareElektro}`;
+  const sokNokkel = `${utsattValg.tekst}|${utsattValg.kategoriId}|${utsattValg.bareElektro}`;
   const [lukketISok, setLukketISok] = useState<{ nokkel: string; ider: string[] }>({
     nokkel: "",
     ider: [],
@@ -181,7 +181,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="relative z-10 gap-3 border-b p-4 shadow-sm">
+      <SidebarHeader className="relative z-10 m-2 gap-3 rounded-xl bg-topplinje p-4 text-white shadow-md lg:m-0">
         <Link
           href="/"
           className="font-semibold leading-tight"
@@ -191,11 +191,11 @@ export function AppSidebar() {
           }}
         >
           MRFK - Datakatalog
-          <span className="block text-xs font-normal text-muted-foreground">
+          <span className="block text-xs font-normal text-white/80">
             Møre og Romsdal fylkeskommune - Krav til innlevering av NVDB data
           </span>
         </Link>
-        <SidebarSeparator className="mx-0" />
+        <SidebarSeparator className="mx-0 bg-white/30" />
         <ObjekttypeFiltre valg={valg} onChange={setValg} />
       </SidebarHeader>
 

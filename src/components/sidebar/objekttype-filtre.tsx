@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import {
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useKategorier } from "@/hooks/use-nvdb";
 import type { Sokevalg } from "@/lib/nvdb/sok";
+import { FILTER_AVKRYSNING, FILTER_BRYTER } from "@/lib/topplinje";
 
 const ALLE_KATEGORIER_ID = 38;
 
@@ -61,16 +61,17 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
   }
 
   return (
-    <FieldGroup className="gap-2">
-      <InputGroup className="bg-background shadow-sm dark:bg-input/30">
-        <InputGroupAddon>
-          <Search className="" />
+    <FieldGroup className="gap-2 rounded-md">
+      <InputGroup className="border-transparent bg-topplinje-knapp text-topplinje shadow-sm dark:bg-topplinje-knapp">
+        <InputGroupAddon className="text-topplinje">
+          <Search />
         </InputGroupAddon>
         <InputGroupInput
           value={valg.tekst}
           onChange={(e) => sett("tekst", e.target.value)}
           onFocus={() => setFilterApent(false)}
           placeholder="Søk på navn eller id"
+          className="placeholder:text-topplinje/60"
           maxLength={100}
           aria-label="Søk etter vegobjekttyper"
           title="Søk på navn eller nummer"
@@ -79,6 +80,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
           <InputGroupAddon align="inline-end">
             <InputGroupButton
               size="icon-xs"
+              className="text-topplinje hover:bg-white/50 hover:text-topplinje"
               onClick={() => sett("tekst", "")}
               aria-label="Tøm søk"
               title="Tøm søk"
@@ -93,7 +95,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
         ref={filterRef}
         open={filterApent}
         onOpenChange={setFilterApent}
-        className="rounded-lg border bg-background shadow-sm dark:bg-input/30"
+        className="rounded-lg bg-topplinje-knapp text-topplinje shadow-sm"
       >
         <CollapsibleTrigger
           title="Vis eller skjul filtrering"
@@ -101,7 +103,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
             <Button
               variant="ghost"
               size="sm"
-              className="group w-full justify-between rounded-lg font-medium"
+              className="group w-full justify-between rounded-lg font-medium text-topplinje hover:bg-white/40 hover:text-topplinje aria-expanded:bg-transparent dark:hover:bg-white/40"
             />
           }
         >
@@ -109,31 +111,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
           <ChevronDown className="transition-transform group-data-[panel-open]:rotate-180" />
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <FieldGroup className="gap-4 border-t px-3 pt-3 pb-3">
-            <FieldSet className="gap-2">
-              <FieldLegend variant="label">Søk også i</FieldLegend>
-              <Field orientation="horizontal" title="Søk også i navnene på egenskapstypene">
-                <Checkbox
-                  id="sok-egenskaper"
-                  checked={valg.iEgenskaper}
-                  onCheckedChange={(c) => sett("iEgenskaper", c === true)}
-                />
-                <FieldLabel htmlFor="sok-egenskaper" className="font-normal">
-                  Egenskapstyper
-                </FieldLabel>
-              </Field>
-              <Field orientation="horizontal" title="Søk også i tillatte verdier, f.eks. materialtyper">
-                <Checkbox
-                  id="sok-verdier"
-                  checked={valg.iVerdier}
-                  onCheckedChange={(c) => sett("iVerdier", c === true)}
-                />
-                <FieldLabel htmlFor="sok-verdier" className="font-normal">
-                  Tillatte verdier
-                </FieldLabel>
-              </Field>
-            </FieldSet>
-
+          <FieldGroup className="gap-4 border-t border-topplinje/20 px-3 pt-3 pb-3">
             <FieldSet className="gap-2">
               <FieldLegend variant="label">Visning</FieldLegend>
               <Field
@@ -141,6 +119,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
                 title="Vis bare objekter innen elektro, merket med blå tekst"
               >
                 <Switch
+                  className={FILTER_BRYTER}
                   id="bare-elektro"
                   checked={valg.bareElektro}
                   onCheckedChange={(c) => sett("bareElektro", c)}
@@ -154,6 +133,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
                 title="Vis alle objektene i én liste uten hovedkategorier"
               >
                 <Switch
+                  className={FILTER_BRYTER}
                   id="vis-som-liste"
                   checked={valg.visSomListe}
                   onCheckedChange={(c) => sett("visSomListe", c)}
@@ -176,7 +156,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
                 <SelectTrigger
                   id="vegobjekttypekategori"
                   size="sm"
-                  className="w-full"
+                  className="w-full border-topplinje/30 bg-white/50 text-topplinje hover:bg-white/70 dark:bg-white/50 dark:hover:bg-white/70"
                   title="Vis bare vegobjekttyper i en bestemt kategori"
                 >
                   <SelectValue />
@@ -200,13 +180,13 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
                 className="flex gap-4"
               >
                 <Field orientation="horizontal" title="Sorter alfabetisk etter navn">
-                  <RadioGroupItem value="navn" id="sorter-navn" />
+                  <RadioGroupItem value="navn" id="sorter-navn" className={FILTER_AVKRYSNING} />
                   <FieldLabel htmlFor="sorter-navn" className="font-normal">
                     Navn
                   </FieldLabel>
                 </Field>
                 <Field orientation="horizontal" title="Sorter etter nummer i NVDB">
-                  <RadioGroupItem value="nummer" id="sorter-nummer" />
+                  <RadioGroupItem value="nummer" id="sorter-nummer" className={FILTER_AVKRYSNING} />
                   <FieldLabel htmlFor="sorter-nummer" className="font-normal">
                     Nummer
                   </FieldLabel>
