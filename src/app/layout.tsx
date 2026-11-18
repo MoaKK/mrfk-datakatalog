@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Innlogging } from "@/components/innlogging";
 import { Separator } from "@/components/ui/separator";
+import { TOPPLINJE_KNAPP } from "@/lib/topplinje";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -24,10 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SidebarProvider style={{ "--sidebar-width": "22rem" } as React.CSSProperties}>
             <AppSidebar />
             <SidebarInset className="min-w-0">
-              <header className="flex h-14 shrink-0 items-center gap-2 border-b px-3 md:px-4">
-                <SidebarTrigger variant="outline" size="icon-lg" title="Vis eller skjul menyen" />
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                <span className="truncate text-sm text-muted-foreground">Møre og Romsdal fylkeskommune - Krav til innlevering av NVDB data</span>
+              <header className="flex h-14 shrink-0 items-center gap-2 bg-topplinje px-3 text-white md:px-4 lg:rounded-t-xl">
+                <SidebarTrigger
+                  variant="outline"
+                  size="icon-lg"
+                  className={TOPPLINJE_KNAPP}
+                  title="Vis eller skjul menyen"
+                />
+                <Separator orientation="vertical" className="mr-2 h-4 bg-white/40" />
+                <span className="truncate text-sm text-white">Møre og Romsdal fylkeskommune - Krav til innlevering av NVDB data</span>
                 <span className="ml-auto shrink-0">
                   <Innlogging />
                 </span>

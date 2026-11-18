@@ -5,17 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
+import { TOPPLINJE_KNAPP } from "@/lib/topplinje";
 
 export function Innlogging() {
   const { data: sesjon, isPending } = authClient.useSession();
 
-  if (isPending) return <Skeleton className="h-8 w-28" />;
+  if (isPending) return <Skeleton className="h-8 w-28 bg-white/20" />;
 
   if (!sesjon) {
     return (
       <Button
         variant="outline"
         size="sm"
+        className={TOPPLINJE_KNAPP}
         title="Logg inn med Google. Bare for administratorer."
         onClick={() =>
           authClient.signIn.social({
@@ -39,7 +41,7 @@ export function Innlogging() {
         Admin
       </Badge>
       <span
-        className="hidden max-w-48 truncate text-sm text-muted-foreground md:inline"
+        className="hidden max-w-48 truncate text-sm text-white md:inline"
         title={sesjon.user.email}
       >
         {sesjon.user.email}
@@ -47,6 +49,7 @@ export function Innlogging() {
       <Button
         variant="outline"
         size="sm"
+        className={TOPPLINJE_KNAPP}
         title="Logg ut"
         onClick={() => authClient.signOut()}
       >
