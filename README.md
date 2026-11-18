@@ -1,8 +1,8 @@
-# NVDB Objektkatalog
+# MRFK - Datakatalog
 
-A catalog of NVDB road object types showing which properties surveyors must register when delivering data to the county road department. Built on the NVDB Datakatalog API (v4).
+A guide for surveyors showing which properties Møre og Romsdal fylkeskommune requires when delivering NVDB data through Datafangst. Not the official NVDB data catalog from Statens vegvesen. Built on the NVDB Datakatalog API (v4).
 
-Live: https://nvdb-objektkatalog.vercel.app
+Live: https://mrfk-datakatalog.vercel.app
 
 ## Features
 
