@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,6 +41,21 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
     ...Object.fromEntries(kategoriListe.map((k) => [String(k.id), k.navn])),
   };
 
+  const [filterApent, setFilterApent] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!filterApent) return;
+    function vedKlikk(e: PointerEvent) {
+      const mal = e.target as Element | null;
+      if (!mal || filterRef.current?.contains(mal)) return;
+      if (mal.closest('[data-slot="select-content"]')) return;
+      setFilterApent(false);
+    }
+    document.addEventListener("pointerdown", vedKlikk);
+    return () => document.removeEventListener("pointerdown", vedKlikk);
+  }, [filterApent]);
+
   function sett<K extends keyof Sokevalg>(key: K, value: Sokevalg[K]) {
     onChange({ ...valg, [key]: value });
   }
@@ -53,6 +69,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
         <InputGroupInput
           value={valg.tekst}
           onChange={(e) => sett("tekst", e.target.value)}
+          onFocus={() => setFilterApent(false)}
           placeholder="Søk på navn eller id"
           maxLength={100}
           aria-label="Søk etter vegobjekttyper"
@@ -72,9 +89,14 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
         )}
       </InputGroup>
 
-      <Collapsible className="rounded-lg border bg-background shadow-sm dark:bg-input/30">
+      <Collapsible
+        ref={filterRef}
+        open={filterApent}
+        onOpenChange={setFilterApent}
+        className="rounded-lg border bg-background shadow-sm dark:bg-input/30"
+      >
         <CollapsibleTrigger
-          title="Vis eller skjul filtre"
+          title="Vis eller skjul filtrering"
           render={
             <Button
               variant="ghost"
@@ -83,7 +105,7 @@ export function ObjekttypeFiltre({ valg, onChange }: Props) {
             />
           }
         >
-          Filtre
+          Filtrer
           <ChevronDown className="transition-transform group-data-[panel-open]:rotate-180" />
         </CollapsibleTrigger>
         <CollapsibleContent>
