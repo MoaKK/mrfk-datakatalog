@@ -30,13 +30,15 @@ export type Sokegrupper = Record<Datakategori, Sokeresultat[]>;
 
 export function sokVegobjekttyper(indeks: VegobjekttypeIndeks[], valg: Sokevalg): Sokegrupper {
   const q = valg.tekst.trim().toLowerCase();
+  const erNummer = /^\d+$/.test(q);
   const grupper: Sokegrupper = { "1": [], "2": [], "3": [], annet: [] };
 
   for (const type of indeks) {
     if (valg.kategoriId !== null && !type.kategorier.includes(valg.kategoriId)) continue;
 
     let treff: string | null = null;
-    let match = q.length === 0 || type.navn.toLowerCase().includes(q) || String(type.id) === q;
+    let match = q.length === 0 || type.navn.toLowerCase().includes(q) ||
+      (erNummer && String(type.id).startsWith(q));
 
     if (!match && valg.iEgenskaper) {
       const egenskap = type.egenskaper.find((navn) => navn.toLowerCase().includes(q));
