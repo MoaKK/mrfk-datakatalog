@@ -14,7 +14,7 @@ export default function Home() {
         <EmptyMedia variant="icon">
           <Signpost />
         </EmptyMedia>
-        <EmptyTitle>Velg en vegobjekttype</EmptyTitle>
+        <EmptyTitle>Velg en vegobjekt i menyen til venstre</EmptyTitle>
         <EmptyDescription>
           Denne siden viser hvilke egenskaper Geodata i Møre og Romsdal fylkeskommune krever at
           entreprenører og innmålere fyller ut når de leverer data til kontroll i Datafangst. For
