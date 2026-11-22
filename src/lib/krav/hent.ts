@@ -1,13 +1,11 @@
 import "server-only";
-import { desc, eq } from "drizzle-orm";
+import { count, eq, max } from "drizzle-orm";
 import { db } from "@/db";
 import { egenskapskrav, kravhendelse, objekttypekrav } from "@/db/schema";
 import type { Kravdata } from "@/lib/krav/typer";
 
-const MAKS_HENDELSER = 200;
-
 export async function hentKrav(vegobjekttypeId: number): Promise<Kravdata> {
-  const [egenskaper, objekt, hendelser] = await Promise.all([
+  const [egenskaper, objekt, logg] = await Promise.all([
     db
       .select({
         egenskapstypeId: egenskapskrav.egenskapstypeId,
@@ -29,21 +27,15 @@ export async function hentKrav(vegobjekttypeId: number): Promise<Kravdata> {
       .where(eq(objekttypekrav.vegobjekttypeId, vegobjekttypeId))
       .limit(1),
     db
-      .select({
-        id: kravhendelse.id,
-        beskrivelse: kravhendelse.beskrivelse,
-        tidspunkt: kravhendelse.tidspunkt,
-      })
+      .select({ antall: count(), sist: max(kravhendelse.tidspunkt) })
       .from(kravhendelse)
-      .where(eq(kravhendelse.vegobjekttypeId, vegobjekttypeId))
-      .orderBy(desc(kravhendelse.tidspunkt), desc(kravhendelse.id))
-      .limit(MAKS_HENDELSER),
+      .where(eq(kravhendelse.vegobjekttypeId, vegobjekttypeId)),
   ]);
 
   const tidspunkter = [
     ...egenskaper.map((e) => e.oppdatert.getTime()),
     ...objekt.map((o) => o.oppdatert.getTime()),
-    ...hendelser.map((h) => h.tidspunkt.getTime()),
+    ...(logg[0]?.sist ? [new Date(logg[0].sist).getTime()] : []),
   ];
 
   return {
@@ -55,10 +47,6 @@ export async function hentKrav(vegobjekttypeId: number): Promise<Kravdata> {
       egenskaper.map((e) => [String(e.egenskapstypeId), { kreves: e.kreves, beskrivelse: e.beskrivelse }]),
     ),
     sistRevidert: tidspunkter.length > 0 ? new Date(Math.max(...tidspunkter)).toISOString() : null,
-    hendelser: hendelser.map((h) => ({
-      id: h.id,
-      beskrivelse: h.beskrivelse,
-      tidspunkt: h.tidspunkt.toISOString(),
-    })),
+    antallHendelser: Number(logg[0]?.antall ?? 0),
   };
 }
