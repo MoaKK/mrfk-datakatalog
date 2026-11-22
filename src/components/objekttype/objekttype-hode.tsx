@@ -179,7 +179,7 @@ export function ObjekttypeHode({
               onCheckedChange={(c) => onFkb?.(c === true)}
             />
             <FieldLabel htmlFor="fkb" className="font-normal">
-              Skal registreres i FKB
+              {fkb ? "Skal registreres i FKB" : "Skal ikke registreres i FKB"}
             </FieldLabel>
           </Field>
           {(fkbKommentar || kanRedigere) && (
