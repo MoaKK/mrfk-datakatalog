@@ -249,7 +249,7 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
         />
       </div>
 
-      <HendelsesloggKort hendelser={krav.data?.hendelser} />
+      <HendelsesloggKort vegobjekttypeId={id} antall={krav.data?.antallHendelser} />
     </div>
   );
 }
