@@ -9,6 +9,14 @@ export interface Kravdata {
   tilleggsinformasjon: string | null;
   elektro: boolean;
   egenskaper: Record<string, Egenskapskrav>;
+  sistRevidert: string | null;
+  hendelser: Kravhendelse[];
+}
+
+export interface Kravhendelse {
+  id: number;
+  beskrivelse: string;
+  tidspunkt: string;
 }
 
 export interface Kravoversikt {

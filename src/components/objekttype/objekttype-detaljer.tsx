@@ -17,12 +17,14 @@ import { NvdbNede } from "@/components/nvdb-nede";
 import { AdminMeny } from "@/components/objekttype/admin-meny";
 import { EgenskapTabell } from "@/components/objekttype/egenskap-tabell";
 import { ObjekttypeHode } from "@/components/objekttype/objekttype-hode";
+import { HendelsesloggKort } from "@/components/objekttype/hendelseslogg-kort";
 import { RelasjonKort } from "@/components/objekttype/relasjon-kort";
 import { useElektro } from "@/hooks/use-elektro";
 import { useKrav, useLagreKrav } from "@/hooks/use-krav";
 import { useVegobjekttype } from "@/hooks/use-nvdb";
 import { erNvdbUtilgjengelig } from "@/lib/nvdb/api-feil";
 import { authClient } from "@/lib/auth-client";
+import { formaterDato } from "@/lib/dato";
 
 export function DetaljerSkjelett() {
   return (
@@ -125,13 +127,23 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
         </Alert>
       )}
 
-      {kanRedigere && (
-        <div className="flex justify-end">
-          <AdminMeny
-            markertElektro={markertElektro}
-            elektroViaKategori={elektroViaKategori}
-            onEndreElektro={(elektro) => lagre.mutate({ type: "elektro", vegobjekttypeId: id, elektro })}
-          />
+      {(kanRedigere || krav.data?.sistRevidert) && (
+        <div className="flex items-center justify-end gap-3">
+          {krav.data?.sistRevidert && (
+            <span
+              className="text-sm text-muted-foreground"
+              title="Datoen Geodata sist endret krav eller kommentarer på dette objektet"
+            >
+              Sist revidert {formaterDato(krav.data.sistRevidert)}
+            </span>
+          )}
+          {kanRedigere && (
+            <AdminMeny
+              markertElektro={markertElektro}
+              elektroViaKategori={elektroViaKategori}
+              onEndreElektro={(elektro) => lagre.mutate({ type: "elektro", vegobjekttypeId: id, elektro })}
+            />
+          )}
         </div>
       )}
 
@@ -236,6 +248,8 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
           tomTekst="Ingen datterobjekter."
         />
       </div>
+
+      <HendelsesloggKort hendelser={krav.data?.hendelser} />
     </div>
   );
 }
