@@ -47,7 +47,7 @@ export function RelasjonTabell({ relasjoner, tomTekst }: Props) {
               <TableCell className="whitespace-normal">
                 {r.finnes ? (
                   <Link
-                    href={`/objekttyper/${id}`}
+                    href={`/objekt/${id}`}
                     prefetch={false}
                     className="font-medium underline-offset-4 hover:underline"
                     title={`Gå til ${visningsnavn} (nummer ${id})`}
