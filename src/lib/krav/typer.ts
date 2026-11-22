@@ -10,7 +10,7 @@ export interface Kravdata {
   elektro: boolean;
   egenskaper: Record<string, Egenskapskrav>;
   sistRevidert: string | null;
-  hendelser: Kravhendelse[];
+  antallHendelser: number;
 }
 
 export interface Kravhendelse {
@@ -22,4 +22,9 @@ export interface Kravhendelse {
 export interface Kravoversikt {
   medKrav: number[];
   elektro: number[];
+}
+
+export interface Hendelseside {
+  hendelser: Kravhendelse[];
+  neste: number | null;
 }

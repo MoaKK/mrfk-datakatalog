@@ -60,7 +60,7 @@ export function anvendEndring(data: Kravdata | undefined, endring: Kravendring):
     elektro: false,
     egenskaper: {},
     sistRevidert: null,
-    hendelser: [],
+    antallHendelser: 0,
   };
   if (endring.type === "fkb") return { ...d, fkb: endring.fkb };
   if (endring.type === "elektro") return { ...d, elektro: endring.elektro };

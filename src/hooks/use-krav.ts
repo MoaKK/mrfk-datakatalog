@@ -1,9 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { anvendEndring, type Kravendring } from "@/lib/krav/endring";
 import { lagreKravendring } from "@/lib/krav/lagre";
-import type { Kravdata, Kravoversikt } from "@/lib/krav/typer";
+import type { Hendelseside, Kravdata, Kravoversikt } from "@/lib/krav/typer";
 
 export const kravKey = (vegobjekttypeId: number) => ["krav", vegobjekttypeId] as const;
 export const kravoversiktKey = ["kravoversikt"] as const;
@@ -37,6 +37,26 @@ export function useKrav(vegobjekttypeId: number) {
       return res.json() as Promise<Kravdata>;
     },
     enabled: Number.isInteger(vegobjekttypeId) && vegobjekttypeId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useHendelser(vegobjekttypeId: number) {
+  return useInfiniteQuery({
+    queryKey: [...kravKey(vegobjekttypeId), "hendelser"],
+    queryFn: async ({ pageParam }) => {
+      const sok = pageParam === null ? "" : `?for=${pageParam}`;
+      const res = await fetch(`/api/krav/${vegobjekttypeId}/hendelser${sok}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { feil?: string } | null;
+        throw new Error(body?.feil ?? `Feil ${res.status}`);
+      }
+      return res.json() as Promise<Hendelseside>;
+    },
+    initialPageParam: null as number | null,
+    getNextPageParam: (side) => side.neste,
     staleTime: 30_000,
   });
 }
