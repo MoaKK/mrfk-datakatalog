@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { NvdbNede } from "@/components/nvdb-nede";
 import { KategoriListe } from "@/components/sidebar/kategori-liste";
 import { ObjekttypeMeny } from "@/components/sidebar/objekttype-meny";
+import { Sokeresultater } from "@/components/sidebar/sokeresultater";
 import { ObjekttypeFiltre } from "@/components/sidebar/objekttype-filtre";
 import { useElektro } from "@/hooks/use-elektro";
 import { useKravoversikt } from "@/hooks/use-krav";
@@ -39,6 +40,7 @@ import { DATAKATEGORIER } from "@/lib/nvdb/kategori";
 import {
   STANDARD_SOKEVALG,
   sokVegobjekttyper,
+  sorterEtterRelevans,
   sorterResultater,
   type Sokegrupper,
   type Sokevalg,
@@ -153,6 +155,12 @@ export function AppSidebar() {
     [grupper, utsattValg.sortering],
   );
 
+  const soker = utsattValg.tekst.trim().length > 0;
+  const sokeliste = useMemo(
+    () => (soker ? sorterEtterRelevans(flatListe, utsattValg.tekst) : []),
+    [soker, flatListe, utsattValg.tekst],
+  );
+
   const laster = indeks.isPending || sesjonLaster || (begrenset && medKrav.isPending);
   const harFeil = indeks.isError || (begrenset && medKrav.isError);
   const filtrerer =
@@ -241,6 +249,8 @@ export function AppSidebar() {
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
+            ) : soker ? (
+              <Sokeresultater key={sokNokkel} resultater={sokeliste} erElektro={erElektro} />
             ) : valg.visSomListe ? (
               <ObjekttypeMeny
                 resultater={flatListe}
