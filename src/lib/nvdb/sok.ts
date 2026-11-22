@@ -47,3 +47,16 @@ export function sorterResultater(liste: Sokeresultat[], sortering: Sokevalg["sor
     sortering === "nummer" ? a.type.id - b.type.id : a.type.navn.localeCompare(b.type.navn, "nb"),
   );
 }
+
+function relevans(r: Sokeresultat, q: string) {
+  const navn = r.type.navn.toLowerCase();
+  if (String(r.type.id) === q || navn === q) return 0;
+  if (navn.startsWith(q)) return 1;
+  if (navn.split(/[\s/,()-]+/).some((ord) => ord.startsWith(q))) return 2;
+  return 3;
+}
+
+export function sorterEtterRelevans(liste: Sokeresultat[], tekst: string) {
+  const q = tekst.trim().toLowerCase();
+  return [...liste].sort((a, b) => relevans(a, q) - relevans(b, q));
+}
