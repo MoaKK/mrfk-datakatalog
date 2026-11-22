@@ -9,7 +9,7 @@ import { TOPPLINJE_KNAPP } from "@/lib/topplinje";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", preload: false });
 
 export const metadata: Metadata = {
   title: "MRFK - Datakatalog",
