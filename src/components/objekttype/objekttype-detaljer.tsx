@@ -153,7 +153,7 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Egenskapstyper</CardTitle>
+          <CardTitle>Egenskaper</CardTitle>
           <CardAction>
             <span className="flex flex-col items-start gap-2">
               <Field orientation="horizontal" title="Vis eller skjul NVDB sine kravmerker ved hver egenskap">
@@ -195,7 +195,7 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
           </CardAction>
           <CardDescription>
             {visNvdbKrav && "Fargede merkene viser kravet i NVDB. "}
-            &apos;Krav til innlevering&apos; er hva geodata syns bør være med.
+            &apos;Krav til innlevering&apos; er hva Geodata krever skal være med.
             {kanRedigere && (
               <span className="block">Du er innlogget som admin og kan endre krav og kommentarer.</span>
             )}

@@ -34,7 +34,7 @@ export function ObjekttypeMeny({ resultater, erElektro, etikettKlasse }: Props) 
       </SidebarGroupLabel>
       <SidebarMenu className="[&_a]:no-underline">
         {resultater.map(({ type }) => {
-          const href = `/objekttyper/${type.id}`;
+          const href = `/objekt/${type.id}`;
           const elektro = erElektro?.(type.id, type.kategorier) ?? false;
           return (
             <SidebarMenuItem key={type.id}>
