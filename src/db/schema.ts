@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const egenskapskrav = pgTable(
@@ -35,5 +44,20 @@ export const objekttypekrav = pgTable(
       "objekttypekrav_tilleggsinformasjon_lengde",
       sql`char_length(${t.tilleggsinformasjon}) <= 2000`,
     ),
+  ],
+);
+
+export const kravhendelse = pgTable(
+  "kravhendelse",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    vegobjekttypeId: integer("vegobjekttype_id").notNull(),
+    beskrivelse: text("beskrivelse").notNull(),
+    tidspunkt: timestamp("tidspunkt", { withTimezone: true }).notNull().defaultNow(),
+    utfortAv: text("utfort_av").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("kravhendelse_vegobjekttype_tidspunkt_idx").on(t.vegobjekttypeId, t.tidspunkt),
+    check("kravhendelse_beskrivelse_lengde", sql`char_length(${t.beskrivelse}) <= 300`),
   ],
 );

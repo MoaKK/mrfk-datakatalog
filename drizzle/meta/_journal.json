@@ -43,6 +43,13 @@
       "when": 1793748487751,
       "tag": "0005_far_jimmy_woo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795384573023,
+      "tag": "0006_tan_red_wolf",
+      "breakpoints": true
     }
   ]
 }
