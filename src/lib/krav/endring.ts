@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { redigerbareIder, standardKrav, type EgenskapInfo } from "@/lib/krav/standard";
 import type { Kravdata } from "@/lib/krav/typer";
 
 export const BESKRIVELSE_MAKS = 1000;
@@ -20,6 +21,11 @@ export const kravendringSchema = z.discriminatedUnion("type", [
     type: z.literal("kreves"),
     vegobjekttypeId: id,
     egenskapstypeId: id,
+    kreves: z.boolean(),
+  }),
+  z.strictObject({
+    type: z.literal("krevesAlle"),
+    vegobjekttypeId: id,
     kreves: z.boolean(),
   }),
   z.strictObject({
@@ -52,13 +58,18 @@ export const kravendringSchema = z.discriminatedUnion("type", [
 
 export type Kravendring = z.input<typeof kravendringSchema>;
 
-export function anvendEndring(data: Kravdata | undefined, endring: Kravendring): Kravdata {
+export function anvendEndring(
+  data: Kravdata | undefined,
+  endring: Kravendring,
+  egenskaper: EgenskapInfo[] = [],
+): Kravdata {
   const d = data ?? {
     fkb: false,
     fkbKommentar: null,
     tilleggsinformasjon: null,
     elektro: false,
     egenskaper: {},
+    vurdert: false,
     sistRevidert: null,
     antallHendelser: 0,
   };
@@ -69,12 +80,23 @@ export function anvendEndring(data: Kravdata | undefined, endring: Kravendring):
     return { ...d, tilleggsinformasjon: endring.tekst.trim() || null };
   }
 
+  const grunnlag = d.vurdert ? d.egenskaper : { ...standardKrav(egenskaper), ...d.egenskaper };
+
+  if (endring.type === "krevesAlle") {
+    const alle = { ...grunnlag };
+    for (const egenskapId of redigerbareIder(egenskaper)) {
+      const nokkel = String(egenskapId);
+      alle[nokkel] = { beskrivelse: alle[nokkel]?.beskrivelse ?? null, kreves: endring.kreves };
+    }
+    return { ...d, vurdert: true, egenskaper: alle };
+  }
+
   const nokkel = String(endring.egenskapstypeId);
-  const naa = d.egenskaper[nokkel] ?? { kreves: false, beskrivelse: null };
+  const naa = grunnlag[nokkel] ?? { kreves: false, beskrivelse: null };
   const ny =
     endring.type === "kreves"
       ? { ...naa, kreves: endring.kreves }
       : { ...naa, beskrivelse: endring.beskrivelse.trim() || null };
 
-  return { ...d, egenskaper: { ...d.egenskaper, [nokkel]: ny } };
+  return { ...d, vurdert: true, egenskaper: { ...grunnlag, [nokkel]: ny } };
 }

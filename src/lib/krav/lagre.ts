@@ -1,15 +1,18 @@
 "use server";
 
 import { headers } from "next/headers";
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
 import { db } from "@/db";
 import { egenskapskrav, kravhendelse, objekttypekrav } from "@/db/schema";
 import { auth, erAdminEpost } from "@/lib/auth";
 import { kravendringSchema } from "@/lib/krav/endring";
+import { PAKREVDE_VIKTIGHETER, pakrevdeIder, redigerbareIder } from "@/lib/krav/standard";
 import { hentVegobjekttype } from "@/lib/nvdb/client";
-import { SKJULTE_EGENSKAPSTYPER } from "@/lib/nvdb/schemas";
 
 export type Lagreresultat = { ok: true } | { ok: false; feil: string };
+
+type Sporringer = [BatchItem<"pg">, ...BatchItem<"pg">[]];
 
 function tekstHendelse(hva: string, forrige: string | null, ny: string | null) {
   if ((forrige ?? "") === (ny ?? "")) return null;
@@ -36,14 +39,12 @@ export async function lagreKravendring(input: unknown): Promise<Lagreresultat> {
   }
 
   const brukerId = sesjon.user.id;
-  const loggfor = (beskrivelse: string | null) =>
-    beskrivelse
-      ? db.insert(kravhendelse).values({
-          vegobjekttypeId,
-          beskrivelse: beskrivelse.slice(0, 300),
-          utfortAv: brukerId,
-        })
-      : null;
+  const logg = (beskrivelse: string) =>
+    db.insert(kravhendelse).values({
+      vegobjekttypeId,
+      beskrivelse: beskrivelse.slice(0, 300),
+      utfortAv: brukerId,
+    });
 
   try {
     if (
@@ -90,71 +91,132 @@ export async function lagreKravendring(input: unknown): Promise<Lagreresultat> {
               : "Admin fjernet markeringen som elektro-objekt";
       }
 
-      const skriv = db
-        .insert(objekttypekrav)
-        .values({ vegobjekttypeId, ...objektfelt, oppdatertAv: brukerId })
-        .onConflictDoUpdate({
-          target: objekttypekrav.vegobjekttypeId,
-          set: { ...objektfelt, oppdatert: sql`now()`, oppdatertAv: brukerId },
-        });
-      const logg = loggfor(hendelse);
-      if (logg) await db.batch([skriv, logg]);
-      else await skriv;
+      const sporringer: Sporringer = [
+        db
+          .insert(objekttypekrav)
+          .values({ vegobjekttypeId, ...objektfelt, oppdatertAv: brukerId })
+          .onConflictDoUpdate({
+            target: objekttypekrav.vegobjekttypeId,
+            set: { ...objektfelt, oppdatert: sql`now()`, oppdatertAv: brukerId },
+          }),
+      ];
+      if (hendelse) sporringer.push(logg(hendelse));
+      await db.batch(sporringer);
       return { ok: true };
     }
 
-    const egenskap = type.egenskapstyper.find((e) => e.id === endring.egenskapstypeId);
-    if (
-      !egenskap ||
-      SKJULTE_EGENSKAPSTYPER.has(egenskap.egenskapstype) ||
-      egenskap.egenskapstype === "Geometri" ||
-      egenskap.viktighet === "HISTORISK"
-    ) {
-      return { ok: false, feil: "Egenskapen hører ikke til denne vegobjekttypen." };
-    }
-
-    const [forrige] = await db
-      .select()
+    const redigerbare = new Set(redigerbareIder(type.egenskapstyper));
+    const [{ antall }] = await db
+      .select({ antall: count() })
       .from(egenskapskrav)
-      .where(
-        and(
-          eq(egenskapskrav.vegobjekttypeId, vegobjekttypeId),
-          eq(egenskapskrav.egenskapstypeId, endring.egenskapstypeId),
-        ),
-      )
-      .limit(1);
+      .where(eq(egenskapskrav.vegobjekttypeId, vegobjekttypeId));
+    const vurdert = antall > 0;
 
-    let felt;
-    let hendelse: string | null;
-    if (endring.type === "kreves") {
-      felt = { kreves: endring.kreves };
-      hendelse =
-        (forrige?.kreves ?? false) === endring.kreves
-          ? null
-          : endring.kreves
-            ? `Admin krysset av «${egenskap.navn}» som krav til innlevering`
-            : `Admin fjernet «${egenskap.navn}» som krav til innlevering`;
+    const sporringer: BatchItem<"pg">[] = [];
+    const hendelser: string[] = [];
+
+    if (endring.type === "krevesAlle") {
+      const ider = [...redigerbare];
+      if (ider.length === 0) return { ok: true };
+      sporringer.push(
+        db
+          .insert(egenskapskrav)
+          .values(
+            ider.map((egenskapstypeId) => ({
+              vegobjekttypeId,
+              egenskapstypeId,
+              kreves: endring.kreves,
+              oppdatertAv: brukerId,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [egenskapskrav.vegobjekttypeId, egenskapskrav.egenskapstypeId],
+            set: { kreves: sql`excluded.kreves`, oppdatert: sql`now()`, oppdatertAv: brukerId },
+          }),
+      );
+      hendelser.push(
+        endring.kreves
+          ? "Admin krysset av alle egenskaper som krav til innlevering"
+          : "Admin fjernet alle egenskaper som krav til innlevering",
+      );
     } else {
-      const ny = endring.beskrivelse || null;
-      felt = { beskrivelse: ny };
-      hendelse = tekstHendelse(`kommentar på «${egenskap.navn}»`, forrige?.beskrivelse ?? null, ny);
+      const egenskap = type.egenskapstyper.find((e) => e.id === endring.egenskapstypeId);
+      if (!egenskap || !redigerbare.has(egenskap.id)) {
+        return { ok: false, feil: "Egenskapen hører ikke til denne vegobjekttypen." };
+      }
+
+      const standard = vurdert ? [] : pakrevdeIder(type.egenskapstyper);
+      if (standard.length > 0) {
+        sporringer.push(
+          db
+            .insert(egenskapskrav)
+            .values(
+              standard.map((egenskapstypeId) => ({
+                vegobjekttypeId,
+                egenskapstypeId,
+                kreves: true,
+                oppdatertAv: brukerId,
+              })),
+            )
+            .onConflictDoNothing(),
+        );
+        hendelser.push(
+          "Admin startet gjennomgangen. Egenskaper som er påkrevd i NVDB ble satt som krav til innlevering",
+        );
+      }
+
+      const [forrige] = await db
+        .select()
+        .from(egenskapskrav)
+        .where(
+          and(
+            eq(egenskapskrav.vegobjekttypeId, vegobjekttypeId),
+            eq(egenskapskrav.egenskapstypeId, endring.egenskapstypeId),
+          ),
+        )
+        .limit(1);
+
+      let felt;
+      let hendelse: string | null;
+      if (endring.type === "kreves") {
+        const forrigeKreves =
+          forrige?.kreves ?? (!vurdert && PAKREVDE_VIKTIGHETER.has(egenskap.viktighet));
+        felt = { kreves: endring.kreves };
+        hendelse =
+          forrigeKreves === endring.kreves
+            ? null
+            : endring.kreves
+              ? `Admin krysset av «${egenskap.navn}» som krav til innlevering`
+              : `Admin fjernet «${egenskap.navn}» som krav til innlevering`;
+      } else {
+        const ny = endring.beskrivelse || null;
+        felt = { beskrivelse: ny };
+        hendelse = tekstHendelse(
+          `kommentar på «${egenskap.navn}»`,
+          forrige?.beskrivelse ?? null,
+          ny,
+        );
+      }
+
+      sporringer.push(
+        db
+          .insert(egenskapskrav)
+          .values({
+            vegobjekttypeId,
+            egenskapstypeId: endring.egenskapstypeId,
+            ...felt,
+            oppdatertAv: brukerId,
+          })
+          .onConflictDoUpdate({
+            target: [egenskapskrav.vegobjekttypeId, egenskapskrav.egenskapstypeId],
+            set: { ...felt, oppdatert: sql`now()`, oppdatertAv: brukerId },
+          }),
+      );
+      if (hendelse) hendelser.push(hendelse);
     }
 
-    const skriv = db
-      .insert(egenskapskrav)
-      .values({
-        vegobjekttypeId,
-        egenskapstypeId: endring.egenskapstypeId,
-        ...felt,
-        oppdatertAv: brukerId,
-      })
-      .onConflictDoUpdate({
-        target: [egenskapskrav.vegobjekttypeId, egenskapskrav.egenskapstypeId],
-        set: { ...felt, oppdatert: sql`now()`, oppdatertAv: brukerId },
-      });
-    const logg = loggfor(hendelse);
-    if (logg) await db.batch([skriv, logg]);
-    else await skriv;
+    for (const tekst of hendelser) sporringer.push(logg(tekst));
+    await db.batch(sporringer as Sporringer);
     return { ok: true };
   } catch (error) {
     console.error(error);

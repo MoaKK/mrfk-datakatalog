@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { anvendEndring, type Kravendring } from "@/lib/krav/endring";
+import type { EgenskapInfo } from "@/lib/krav/standard";
 import { lagreKravendring } from "@/lib/krav/lagre";
 import type { Hendelseside, Kravdata, Kravoversikt } from "@/lib/krav/typer";
 
@@ -61,7 +62,7 @@ export function useHendelser(vegobjekttypeId: number) {
   });
 }
 
-export function useLagreKrav(vegobjekttypeId: number) {
+export function useLagreKrav(vegobjekttypeId: number, egenskaper: EgenskapInfo[] = []) {
   const queryClient = useQueryClient();
   const key = kravKey(vegobjekttypeId);
 
@@ -73,7 +74,7 @@ export function useLagreKrav(vegobjekttypeId: number) {
     onMutate: async (endring) => {
       await queryClient.cancelQueries({ queryKey: key });
       const forrige = queryClient.getQueryData<Kravdata>(key);
-      queryClient.setQueryData<Kravdata>(key, (data) => anvendEndring(data, endring));
+      queryClient.setQueryData<Kravdata>(key, (data) => anvendEndring(data, endring, egenskaper));
       return { forrige };
     },
     onError: (_feil, _endring, kontekst) => {
