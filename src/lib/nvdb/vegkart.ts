@@ -17,10 +17,6 @@ function filter(typeId: number, egenskapId: number, operator: string, verdi: str
   return `${VEGKART}hva:hva[0][filter][0][operator]=${operator}&hva[0][filter][0][type_id]=${egenskapId}&hva[0][filter][0][verdi]=${verdi}&hva[0][id]=${typeId}`;
 }
 
-export function vegkartEgenskap(typeId: number, egenskapId: number) {
-  return filter(typeId, egenskapId, "!=", "");
-}
-
 export function vegkartTillattVerdi(typeId: number, egenskapId: number, verdiId: number) {
   return filter(typeId, egenskapId, "=", verdiId);
 }

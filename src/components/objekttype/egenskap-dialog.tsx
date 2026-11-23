@@ -19,7 +19,7 @@ import { UtvidbarTekst } from "@/components/objekttype/utvidbar-tekst";
 import { ViktighetBadge } from "@/components/viktighet-badge";
 import type { Egenskapskrav } from "@/lib/krav/typer";
 import type { Egenskapstype } from "@/lib/nvdb/schemas";
-import { vegkartEgenskap, vegkartTillattVerdi } from "@/lib/nvdb/vegkart";
+import { vegkartTillattVerdi } from "@/lib/nvdb/vegkart";
 import { TOPPLINJE_KNAPP } from "@/lib/topplinje";
 
 interface Props {
@@ -142,15 +142,9 @@ export function EgenskapDialog({
 
               <Separator />
 
-              <span className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-medium">
-                  {verdier.length > 0 ? `Tillatte verdier (${verdier.length})` : "Verdi"}
-                </h3>
-                <VegkartLenke
-                  href={vegkartEgenskap(vegobjekttypeId, egenskap.id)}
-                  hva={`objekter med ${egenskap.navn} utfylt`}
-                />
-              </span>
+              <h3 className="text-sm font-medium">
+                {verdier.length > 0 ? `Tillatte verdier (${verdier.length})` : "Verdi"}
+              </h3>
 
               {verdier.length > 0 ? (
                 <ul className="flex flex-col">
