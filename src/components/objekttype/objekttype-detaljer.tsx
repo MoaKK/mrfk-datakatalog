@@ -210,6 +210,7 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
         </CardHeader>
         <CardContent>
           <EgenskapTabell
+            vegobjekttypeId={id}
             egenskaper={t.egenskapstyper}
             krav={effektiveKrav(krav.data, t.egenskapstyper)}
             kanRedigere={kanRedigere}
