@@ -14,6 +14,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { DatakategoriBadge } from "@/components/datakategori-badge";
 import { BeskrivelseRedigerer } from "@/components/objekttype/beskrivelse-redigerer";
+import { UtvidbarTekst } from "@/components/objekttype/utvidbar-tekst";
 import { VegkartLenker } from "@/components/objekttype/vegkart-lenker";
 import { ViktighetBadge } from "@/components/viktighet-badge";
 import { useKategorier } from "@/hooks/use-nvdb";
@@ -52,7 +53,7 @@ function Innmaling({ geometri }: { geometri: Egenskapstype }) {
     <li className="flex flex-col gap-1 rounded-lg border p-3">
       <span className="flex flex-wrap items-center gap-2 font-medium">
         {PAKREVD.has(geometri.viktighet) ? "Skal" : "Kan"} måles inn som {form}
-        <ViktighetBadge viktighet={geometri.viktighet} forklaring={geometri.veiledning} />
+        <ViktighetBadge viktighet={geometri.viktighet} />
       </span>
       {(horisontalt || vertikalt) && (
         <span className="text-muted-foreground">
@@ -60,6 +61,11 @@ function Innmaling({ geometri }: { geometri: Egenskapstype }) {
           {horisontalt && ` horisontalt ${horisontalt}`}
           {horisontalt && vertikalt && ","}
           {vertikalt && ` vertikalt ${vertikalt}`}
+        </span>
+      )}
+      {geometri.veiledning && (
+        <span className="text-xs text-muted-foreground">
+          <UtvidbarTekst tekst={geometri.veiledning} hva="forklaringen fra NVDB" />
         </span>
       )}
     </li>

@@ -25,6 +25,7 @@ import { useVegobjekttype } from "@/hooks/use-nvdb";
 import { erNvdbUtilgjengelig } from "@/lib/nvdb/api-feil";
 import { authClient } from "@/lib/auth-client";
 import { formaterDato } from "@/lib/dato";
+import { effektiveKrav } from "@/lib/krav/standard";
 
 export function DetaljerSkjelett() {
   return (
@@ -36,7 +37,6 @@ export function DetaljerSkjelett() {
 }
 
 const VIS_BESKRIVELSE_NOKKEL = "nvdb-vis-nvdb-beskrivelse";
-const VIS_KRAV_NOKKEL = "nvdb-vis-nvdb-krav";
 const VIS_ALLE_NOKKEL = "nvdb-vis-alle-egenskaper";
 const BRYTER_ENDRET = "nvdb-bryter-endret";
 
@@ -79,11 +79,10 @@ function useLagretBryter(nokkel: string) {
 
 export function ObjekttypeDetaljer({ id }: { id: number }) {
   const [visNvdbBeskrivelse, setVisNvdbBeskrivelse] = useLagretBryter(VIS_BESKRIVELSE_NOKKEL);
-  const [visNvdbKrav, setVisNvdbKrav] = useLagretBryter(VIS_KRAV_NOKKEL);
   const [visAlleEgenskaper, setVisAlleEgenskaper] = useLagretBryter(VIS_ALLE_NOKKEL);
   const type = useVegobjekttype(id);
   const krav = useKrav(id);
-  const lagre = useLagreKrav(id);
+  const lagre = useLagreKrav(id, type.data?.egenskapstyper);
   const { iElektroKategori } = useElektro();
   const { data: sesjon } = authClient.useSession();
   const kanRedigere = !!sesjon && krav.isSuccess;
@@ -168,16 +167,6 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
           <CardTitle>Egenskaper</CardTitle>
           <CardAction>
             <span className="flex flex-col items-start gap-2">
-              <Field orientation="horizontal" title="Vis eller skjul NVDB sine kravmerker ved hver egenskap">
-                <Switch
-                  id="vis-nvdb-krav"
-                  checked={visNvdbKrav}
-                  onCheckedChange={(checked) => setVisNvdbKrav(checked)}
-                />
-                <FieldLabel htmlFor="vis-nvdb-krav" className="font-normal whitespace-nowrap">
-                  Vis NVDB krav
-                </FieldLabel>
-              </Field>
               <Field orientation="horizontal" title="Vis eller skjul NVDB sin beskrivelse under hver egenskap">
                 <Switch
                   id="vis-nvdb-beskrivelse"
@@ -206,8 +195,14 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
             </span>
           </CardAction>
           <CardDescription>
-            {visNvdbKrav && "Fargede merkene viser kravet i NVDB. "}
-            &apos;Krav til innlevering&apos; er hva Geodata krever skal være med.
+            Fargede merkene viser kravet i NVDB. &apos;Krav til innlevering&apos; er hva Geodata
+            krever skal være med.
+            {krav.data && !krav.data.vurdert && (
+              <span className="block">
+                Geodata har ikke gått gjennom dette objektet ennå. Egenskaper som er påkrevd i NVDB er
+                derfor krysset av som utgangspunkt.
+              </span>
+            )}
             {kanRedigere && (
               <span className="block">Du er innlogget som admin og kan endre krav og kommentarer.</span>
             )}
@@ -216,14 +211,14 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
         <CardContent>
           <EgenskapTabell
             egenskaper={t.egenskapstyper}
-            krav={krav.data?.egenskaper}
+            krav={effektiveKrav(krav.data, t.egenskapstyper)}
             kanRedigere={kanRedigere}
             visNvdbBeskrivelse={visNvdbBeskrivelse}
-            visNvdbKrav={visNvdbKrav}
             visAlleEgenskaper={visAlleEgenskaper}
             onKreves={(egenskapstypeId, kreves) =>
               lagre.mutate({ type: "kreves", vegobjekttypeId: id, egenskapstypeId, kreves })
             }
+            onKrevesAlle={(kreves) => lagre.mutate({ type: "krevesAlle", vegobjekttypeId: id, kreves })}
             onBeskrivelse={async (egenskapstypeId, beskrivelse) => {
               await lagre.mutateAsync({
                 type: "beskrivelse",

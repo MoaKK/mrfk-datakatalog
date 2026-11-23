@@ -12,19 +12,18 @@ import { BeskrivelseRedigerer } from "@/components/objekttype/beskrivelse-redige
 import { UtvidbarTekst } from "@/components/objekttype/utvidbar-tekst";
 import { ViktighetBadge } from "@/components/viktighet-badge";
 import type { Kravdata } from "@/lib/krav/typer";
-import { SKJULTE_EGENSKAPSTYPER, type Egenskapstype } from "@/lib/nvdb/schemas";
-
-const PAKREVD = new Set(["PÅKREVD_ABSOLUTT", "PÅKREVD_IKKE_ABSOLUTT"]);
+import { erRedigerbar, PAKREVDE_VIKTIGHETER } from "@/lib/krav/standard";
+import type { Egenskapstype } from "@/lib/nvdb/schemas";
 
 interface Props {
   egenskaper: Egenskapstype[];
   krav?: Kravdata["egenskaper"];
   kanRedigere?: boolean;
   visNvdbBeskrivelse?: boolean;
-  visNvdbKrav?: boolean;
   visAlleEgenskaper?: boolean;
   onKreves?: (egenskapstypeId: number, kreves: boolean) => void;
   onBeskrivelse?: (egenskapstypeId: number, beskrivelse: string) => Promise<void>;
+  onKrevesAlle?: (kreves: boolean) => void;
 }
 
 export function EgenskapTabell({
@@ -32,10 +31,10 @@ export function EgenskapTabell({
   krav,
   kanRedigere = false,
   visNvdbBeskrivelse = false,
-  visNvdbKrav = false,
   visAlleEgenskaper = false,
   onKreves,
   onBeskrivelse,
+  onKrevesAlle,
 }: Props) {
   const lagreBeskrivelse = (id: number) => (tekst: string) =>
     onBeskrivelse ? onBeskrivelse(id, tekst) : Promise.resolve();
@@ -43,16 +42,18 @@ export function EgenskapTabell({
   const synlige = egenskaper
     .filter(
       (e) =>
-        !SKJULTE_EGENSKAPSTYPER.has(e.egenskapstype) &&
-        e.egenskapstype !== "Geometri" &&
-        e.viktighet !== "HISTORISK" &&
+        erRedigerbar(e) &&
         (kanRedigere ||
           visAlleEgenskaper ||
-          PAKREVD.has(e.viktighet) ||
+          PAKREVDE_VIKTIGHETER.has(e.viktighet) ||
           krav?.[String(e.id)]?.kreves === true ||
           !!krav?.[String(e.id)]?.beskrivelse),
     )
     .sort((a, b) => (a.sorteringsnummer ?? 0) - (b.sorteringsnummer ?? 0));
+
+  const antallKrysset = synlige.filter((e) => krav?.[String(e.id)]?.kreves).length;
+  const alleKrysset = synlige.length > 0 && antallKrysset === synlige.length;
+  const noenKrysset = antallKrysset > 0 && !alleKrysset;
 
   return (
     <Table className="border md:table-fixed [&_tr>*:first-child]:border-r md:[&_tr>*:nth-child(2)]:border-r">
@@ -65,8 +66,25 @@ export function EgenskapTabell({
             className="w-16 text-center md:w-40"
             title="Vegavdelingens krav: om egenskapen må være med ved innlevering"
           >
-            <span className="md:hidden">Krav</span>
-            <span className="hidden md:inline">Krav til innlevering</span>
+            <span className="flex flex-col items-center gap-2">
+              <span>
+                <span className="md:hidden">Krav</span>
+                <span className="hidden md:inline">Krav til innlevering</span>
+              </span>
+              {kanRedigere && synlige.length > 0 && (
+                <Checkbox
+                  checked={alleKrysset}
+                  indeterminate={noenKrysset}
+                  onCheckedChange={() => onKrevesAlle?.(!alleKrysset)}
+                  aria-label="Kryss av alle egenskaper som krav til innlevering"
+                  title={
+                    alleKrysset
+                      ? "Fjern alle egenskaper som krav til innlevering"
+                      : "Kryss av alle egenskaper som krav til innlevering"
+                  }
+                />
+              )}
+            </span>
           </TableHead>
           <TableHead className="hidden md:table-cell" title="Vegavdelingens kommentar til egenskapen">
             Kommentar
@@ -95,13 +113,16 @@ export function EgenskapTabell({
               <TableCell className="align-top whitespace-normal wrap-break-word">
                 <span className="flex flex-wrap items-center gap-2 font-medium">
                   {e.navn}
-                  {visNvdbKrav && (
-                    <ViktighetBadge viktighet={e.viktighet} forklaring={e.veiledning} />
-                  )}
+                  <ViktighetBadge viktighet={e.viktighet} />
                 </span>
                 {visNvdbBeskrivelse && e.beskrivelse && (
                   <span className="mt-1 block text-xs text-muted-foreground">
                     <UtvidbarTekst tekst={e.beskrivelse} hva="NVDB sin beskrivelse" />
+                  </span>
+                )}
+                {e.veiledning && (
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    <UtvidbarTekst tekst={e.veiledning} hva="forklaringen fra NVDB" />
                   </span>
                 )}
                 {(k?.beskrivelse || kanRedigere) && (
