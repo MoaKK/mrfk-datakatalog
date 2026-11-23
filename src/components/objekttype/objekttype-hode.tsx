@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -38,6 +40,32 @@ const REKKEFOLGE = ["PÅKREVD_ABSOLUTT", "PÅKREVD_IKKE_ABSOLUTT", "BETINGET", "
 function viktighetsrekkefolge(viktighet: string) {
   const plass = REKKEFOLGE.indexOf(viktighet);
   return plass === -1 ? REKKEFOLGE.length : plass;
+}
+
+const SETNINGSSKILLE = /(?<=[.!?])\s+(?=[A-ZÆØÅ0-9«"])/;
+
+function ObjektBeskrivelse({ tekst }: { tekst: string }) {
+  const [utvidet, setUtvidet] = useState(false);
+  const setninger = tekst.trim().split(SETNINGSSKILLE);
+  const harMer = setninger.length > 2;
+
+  return (
+    <>
+      {harMer && !utvidet ? setninger.slice(0, 2).join(" ") : tekst}
+      {harMer && (
+        <Button
+          variant="link"
+          size="sm"
+          className="ml-1 h-auto p-0 align-baseline"
+          aria-expanded={utvidet}
+          title={utvidet ? "Vis mindre av beskrivelsen" : "Vis hele beskrivelsen"}
+          onClick={() => setUtvidet(!utvidet)}
+        >
+          {utvidet ? "Vis mindre" : "Les mer"}
+        </Button>
+      )}
+    </>
+  );
 }
 
 function iCm(meter?: number | null) {
@@ -113,7 +141,7 @@ export function ObjekttypeHode({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="gap-x-6">
         <CardTitle className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xl md:text-2xl">
           <span className={cn(elektro && ELEKTRO_FARGE)} title={elektro ? "Elektro-objekt" : undefined}>
             {type.navn}
@@ -126,7 +154,9 @@ export function ObjekttypeHode({
           </span>
         </CardTitle>
         {type.beskrivelse && (
-          <CardDescription className="text-sm md:text-base">{type.beskrivelse}</CardDescription>
+          <CardDescription className="text-sm md:text-base">
+            <ObjektBeskrivelse tekst={type.beskrivelse} />
+          </CardDescription>
         )}
         <CardAction>
           <VegkartLenker id={type.id} navn={type.navn} />
