@@ -218,7 +218,6 @@ export function ObjekttypeDetaljer({ id }: { id: number }) {
             onKreves={(egenskapstypeId, kreves) =>
               lagre.mutate({ type: "kreves", vegobjekttypeId: id, egenskapstypeId, kreves })
             }
-            onKrevesAlle={(kreves) => lagre.mutate({ type: "krevesAlle", vegobjekttypeId: id, kreves })}
             onBeskrivelse={async (egenskapstypeId, beskrivelse) => {
               await lagre.mutateAsync({
                 type: "beskrivelse",

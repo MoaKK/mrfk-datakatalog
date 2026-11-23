@@ -23,7 +23,6 @@ interface Props {
   visAlleEgenskaper?: boolean;
   onKreves?: (egenskapstypeId: number, kreves: boolean) => void;
   onBeskrivelse?: (egenskapstypeId: number, beskrivelse: string) => Promise<void>;
-  onKrevesAlle?: (kreves: boolean) => void;
 }
 
 export function EgenskapTabell({
@@ -34,7 +33,6 @@ export function EgenskapTabell({
   visAlleEgenskaper = false,
   onKreves,
   onBeskrivelse,
-  onKrevesAlle,
 }: Props) {
   const lagreBeskrivelse = (id: number) => (tekst: string) =>
     onBeskrivelse ? onBeskrivelse(id, tekst) : Promise.resolve();
@@ -51,9 +49,11 @@ export function EgenskapTabell({
     )
     .sort((a, b) => (a.sorteringsnummer ?? 0) - (b.sorteringsnummer ?? 0));
 
-  const antallKrysset = synlige.filter((e) => krav?.[String(e.id)]?.kreves).length;
-  const alleKrysset = synlige.length > 0 && antallKrysset === synlige.length;
-  const noenKrysset = antallKrysset > 0 && !alleKrysset;
+  const bildetekst = kanRedigere
+    ? "Som admin ser du alle egenskaper. Andre ser bare de som er påkrevd i NVDB, krysset av eller har en kommentar."
+    : visAlleEgenskaper
+      ? "Viser alle egenskaper."
+      : null;
 
   return (
     <Table className="border md:table-fixed [&_tr>*:first-child]:border-r md:[&_tr>*:nth-child(2)]:border-r">
@@ -66,38 +66,15 @@ export function EgenskapTabell({
             className="w-16 text-center md:w-40"
             title="Vegavdelingens krav: om egenskapen må være med ved innlevering"
           >
-            <span className="flex flex-col items-center gap-2">
-              <span>
-                <span className="md:hidden">Krav</span>
-                <span className="hidden md:inline">Krav til innlevering</span>
-              </span>
-              {kanRedigere && synlige.length > 0 && (
-                <Checkbox
-                  checked={alleKrysset}
-                  indeterminate={noenKrysset}
-                  onCheckedChange={() => onKrevesAlle?.(!alleKrysset)}
-                  aria-label="Kryss av alle egenskaper som krav til innlevering"
-                  title={
-                    alleKrysset
-                      ? "Fjern alle egenskaper som krav til innlevering"
-                      : "Kryss av alle egenskaper som krav til innlevering"
-                  }
-                />
-              )}
-            </span>
+            <span className="md:hidden">Krav</span>
+            <span className="hidden md:inline">Krav til innlevering</span>
           </TableHead>
           <TableHead className="hidden md:table-cell" title="Vegavdelingens kommentar til egenskapen">
             Kommentar
           </TableHead>
         </TableRow>
       </TableHeader>
-      <TableCaption className="text-left">
-        {kanRedigere
-          ? "Som admin ser du alle egenskaper. Andre ser bare de som er påkrevd i NVDB, krysset av eller har en kommentar."
-          : visAlleEgenskaper
-            ? "Viser alle egenskaper."
-            : "Viser egenskaper som er påkrevd i NVDB, eller som geodata har krysset av eller kommentert."}
-      </TableCaption>
+      {bildetekst && <TableCaption className="text-left">{bildetekst}</TableCaption>}
       <TableBody>
         {synlige.length === 0 && (
           <TableRow className="hover:bg-transparent">
