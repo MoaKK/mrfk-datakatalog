@@ -46,6 +46,7 @@ export async function hentKrav(vegobjekttypeId: number): Promise<Kravdata> {
     egenskaper: Object.fromEntries(
       egenskaper.map((e) => [String(e.egenskapstypeId), { kreves: e.kreves, beskrivelse: e.beskrivelse }]),
     ),
+    vurdert: egenskaper.length > 0,
     sistRevidert: tidspunkter.length > 0 ? new Date(Math.max(...tidspunkter)).toISOString() : null,
     antallHendelser: Number(logg[0]?.antall ?? 0),
   };

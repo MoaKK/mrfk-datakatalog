@@ -26,6 +26,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TOPPLINJE_KNAPP } from "@/lib/topplinje";
+import { cn } from "@/lib/utils";
 import { NvdbNede } from "@/components/nvdb-nede";
 import { KategoriListe } from "@/components/sidebar/kategori-liste";
 import { ObjekttypeMeny } from "@/components/sidebar/objekttype-meny";
@@ -275,7 +277,7 @@ export function AppSidebar() {
           <Button
             variant="outline"
             size="sm"
-            className="w-full"
+            className={cn("w-full", TOPPLINJE_KNAPP)}
             title="Gå til toppen av lista"
             onClick={() => innholdRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
           >

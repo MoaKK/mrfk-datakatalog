@@ -61,6 +61,7 @@ export function BeskrivelseRedigerer({
   const uendret = tekst.trim() === (verdi ?? "");
 
   async function lagre() {
+    if (lagrer) return;
     setLagrer(true);
     setFeil(null);
     try {
@@ -84,11 +85,17 @@ export function BeskrivelseRedigerer({
         aria-invalid={forLang || undefined}
         disabled={lagrer}
         autoFocus
+        onBlur={() => {
+          if (lagrer) return;
+          if (uendret) setRedigerer(false);
+          else if (!forLang) lagre();
+        }}
       />
       <span className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
           title={`Lagre ${etikett}en`}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={lagre}
           disabled={lagrer || forLang || uendret}
         >
@@ -98,6 +105,7 @@ export function BeskrivelseRedigerer({
           variant="ghost"
           size="sm"
           title="Avbryt uten å lagre"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setRedigerer(false)}
           disabled={lagrer}
         >

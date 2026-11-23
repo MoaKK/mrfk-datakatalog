@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -14,6 +16,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { DatakategoriBadge } from "@/components/datakategori-badge";
 import { BeskrivelseRedigerer } from "@/components/objekttype/beskrivelse-redigerer";
+import { UtvidbarTekst } from "@/components/objekttype/utvidbar-tekst";
 import { VegkartLenker } from "@/components/objekttype/vegkart-lenker";
 import { ViktighetBadge } from "@/components/viktighet-badge";
 import { useKategorier } from "@/hooks/use-nvdb";
@@ -39,6 +42,32 @@ function viktighetsrekkefolge(viktighet: string) {
   return plass === -1 ? REKKEFOLGE.length : plass;
 }
 
+const SETNINGSSKILLE = /(?<=[.!?])\s+(?=[A-ZÆØÅ0-9«"])/;
+
+function ObjektBeskrivelse({ tekst }: { tekst: string }) {
+  const [utvidet, setUtvidet] = useState(false);
+  const setninger = tekst.trim().split(SETNINGSSKILLE);
+  const harMer = setninger.length > 2;
+
+  return (
+    <>
+      {harMer && !utvidet ? setninger.slice(0, 2).join(" ") : tekst}
+      {harMer && (
+        <Button
+          variant="link"
+          size="sm"
+          className="ml-1 h-auto p-0 align-baseline"
+          aria-expanded={utvidet}
+          title={utvidet ? "Vis mindre av beskrivelsen" : "Vis hele beskrivelsen"}
+          onClick={() => setUtvidet(!utvidet)}
+        >
+          {utvidet ? "Vis mindre" : "Les mer"}
+        </Button>
+      )}
+    </>
+  );
+}
+
 function iCm(meter?: number | null) {
   return meter ? `${Math.round(meter * 100)} cm` : null;
 }
@@ -52,7 +81,7 @@ function Innmaling({ geometri }: { geometri: Egenskapstype }) {
     <li className="flex flex-col gap-1 rounded-lg border p-3">
       <span className="flex flex-wrap items-center gap-2 font-medium">
         {PAKREVD.has(geometri.viktighet) ? "Skal" : "Kan"} måles inn som {form}
-        <ViktighetBadge viktighet={geometri.viktighet} forklaring={geometri.veiledning} />
+        <ViktighetBadge viktighet={geometri.viktighet} />
       </span>
       {(horisontalt || vertikalt) && (
         <span className="text-muted-foreground">
@@ -60,6 +89,11 @@ function Innmaling({ geometri }: { geometri: Egenskapstype }) {
           {horisontalt && ` horisontalt ${horisontalt}`}
           {horisontalt && vertikalt && ","}
           {vertikalt && ` vertikalt ${vertikalt}`}
+        </span>
+      )}
+      {geometri.veiledning && (
+        <span className="text-xs text-muted-foreground">
+          <UtvidbarTekst tekst={geometri.veiledning} hva="forklaringen fra NVDB" />
         </span>
       )}
     </li>
@@ -107,7 +141,7 @@ export function ObjekttypeHode({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="gap-x-6">
         <CardTitle className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xl md:text-2xl">
           <span className={cn(elektro && ELEKTRO_FARGE)} title={elektro ? "Elektro-objekt" : undefined}>
             {type.navn}
@@ -120,7 +154,9 @@ export function ObjekttypeHode({
           </span>
         </CardTitle>
         {type.beskrivelse && (
-          <CardDescription className="text-sm md:text-base">{type.beskrivelse}</CardDescription>
+          <CardDescription className="text-sm md:text-base">
+            <ObjektBeskrivelse tekst={type.beskrivelse} />
+          </CardDescription>
         )}
         <CardAction>
           <VegkartLenker id={type.id} navn={type.navn} />
